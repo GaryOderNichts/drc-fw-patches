@@ -19,8 +19,8 @@ patch: unpack
 
 	@echo "Patching versions..."
 # patch version to 254.0.0 (blob_header.bin is big endian, VER_.bin is little endian)
-	@printf '\xfe\x00\x00\x00' | dd of=unpacked/blob_header.bin bs=1 seek=0 conv=notrunc
-	@printf '\x00\x00\x00\xfe' | dd of=unpacked/VER_.bin bs=1 seek=0 conv=notrunc
+	@env printf '\xfe\x00\x00\x00' | dd of=unpacked/blob_header.bin bs=1 seek=0 count=4 conv=notrunc
+	@env printf '\x00\x00\x00\xfe' | dd of=unpacked/VER_.bin bs=1 seek=0 count=4 conv=notrunc
 
 pack: patch
 	@echo "Packing firmware..."
