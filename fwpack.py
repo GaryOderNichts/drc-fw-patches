@@ -136,8 +136,22 @@ def pack_firmware(source_dir, dest_file):
     blob_type = construct.Int32ul.parse_file(os.path.join(source_dir, "blob_type.bin"))
 
     # Parse sections from INDX
+    indx_data = b""
     firmware_data = b""
     sections = construct.GreedyRange(FirmwareSection).parse_file(os.path.join(source_dir, "INDX.bin"))
+    
+    if len(sections) < 3:
+        print(f"Not enough sections. Have {len(sections)} but need at least 3.")
+        sys.exit(1)
+
+    if sections[0].name != "INDX":
+        print(f"Expected INDX at section 0. This firmware is not bootable!")
+        sys.exit(1)
+
+    if sections[2].name != "LVC_":
+        print(f"Expected LVC_ at section 2. This firmware is not bootable!")
+        sys.exit(1)
+
     for s in sections:
         print(f"Storing {s.name}...")
 
@@ -150,6 +164,11 @@ def pack_firmware(source_dir, dest_file):
         s.size = len(section_data)
         s.offset = len(firmware_data)
         firmware_data += section_data
+
+        indx_data += FirmwareSection.build(s)
+
+    # Update INDX data
+    firmware_data = indx_data + firmware_data[len(indx_data):]
 
     # Update total image size
     blob_header.imageSize = FirmwareHeader.sizeof() + len(firmware_data)
